@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "./src",
     "lib": [
       "ES2022"
     ],
@@ -12,31 +11,31 @@
     ],
     "paths": {
       "@/*": [
-        "*"
+        "./src/*"
       ],
       "@config/*": [
-        "config/*"
+        "./src/config/*"
       ],
       "@database/*": [
-        "database/*"
+        "./src/database/*"
       ],
       "@controllers/*": [
-        "controllers/*"
+        "./src/controllers/*"
       ],
       "@services/*": [
-        "services/*"
+        "./src/services/*"
       ],
       "@routes/*": [
-        "routes/*"
+        "./src/routes/*"
       ],
       "@middleware/*": [
-        "middleware/*"
+        "./src/middleware/*"
       ],
       "@models/*": [
-        "models/*"
+        "./src/models/*"
       ],
       "@utils/*": [
-        "utils/*"
+        "./src/utils/*"
       ]
     }
   },
