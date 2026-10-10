@@ -1,0 +1,50 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "*"
+      ],
+      "@config/*": [
+        "config/*"
+      ],
+      "@database/*": [
+        "database/*"
+      ],
+      "@controllers/*": [
+        "controllers/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@routes/*": [
+        "routes/*"
+      ],
+      "@middleware/*": [
+        "middleware/*"
+      ],
+      "@models/*": [
+        "models/*"
+      ],
+      "@utils/*": [
+        "utils/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

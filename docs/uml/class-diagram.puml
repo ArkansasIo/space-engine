@@ -1,0 +1,468 @@
+@startuml AstroSim Class Diagram
+' PlantUML source for docs/uml/class-diagram.md
+' Render:  plantuml docs/uml/class-diagram.puml
+'      or:  https://www.plantuml.com/plantuml
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+title AstroSim — Class Model
+
+' ============================================================ SIMULATION CORE
+
+package "client/src/sim" #EAF2FF {
+
+  class Engine {
+    + bodies : Body[]
+    + gravity : GravitySettings
+    + collisionMode : CollisionMode
+    + dt : number
+    + time : number
+    + steps : number
+    + running : boolean
+    + timeScale : number
+    --
+    + loadScene(scene) : void
+    + toScene(camera) : SceneSettings
+    + addBody(opts) : Body
+    + removeBody(id) : boolean
+    + findBody(id) : Body
+    + clear() : void
+    + step(dt) : void
+    + advance(realDtSeconds) : void
+    + {static} clampTrail(n) : number
+    + snapshot() : BodySpec[]
+    + rebaseEnergy() : void
+    + energy : number {get}
+    + energyDrift : number {get}
+    + bodyCount : number {get}
+  }
+
+  class Body {
+    + id : number
+    + name : string
+    + kind : BodyKind
+    + mass : number
+    + radius : number
+    + x : number
+    + y : number
+    + vx : number
+    + vy : number
+    + ax : number
+    + ay : number
+    + color : string
+    + temperature : number
+    + luminosity : number
+    + spin : number
+    + fixed : boolean
+    + trailLength : number
+    + trail : [number, number][]
+    + alive : boolean
+    --
+    + pushTrail() : void
+    + clearTrail() : void
+    + toSpec() : BodySpec
+    + {static} fromSpec(spec) : Body
+    + clone() : Body
+    + speed : number {get}
+    + kineticEnergy : number {get}
+  }
+
+  class Gravity {
+    <<module>>
+    + computeAccelerations(bodies, settings) : void
+    + potentialEnergy(bodies, settings) : number
+    + kineticEnergy(bodies) : number
+    + totalEnergy(bodies, settings) : number
+    + totalMomentum(bodies) : [number, number]
+    + centerOfMass(bodies) : [number, number]
+    + circularSpeed(mass, r, G) : number
+    + escapeSpeed(mass, r, G) : number
+    + setCircularOrbit(sat, central, G, cw) : void
+    + isBound(bodies, settings) : boolean
+  }
+
+  class Collision {
+    <<module>>
+    + detect(bodies) : CollisionPair[]
+    + bounce(a, b) : void
+    + merge(a, b) : Body
+    + resolve(bodies, mode) : number
+    + prune(bodies) : Body[]
+  }
+
+  class Relativity {
+    <<module>>
+    + lorentzFactor(v, c) : number
+    + relativisticMomentum(m, v, c) : number
+    + relativisticKinetic(m, v, c) : number
+    + grCorrection(pos, vel, m, src, G, c) : Vec
+    + perihelionPrecession(a, e, m, G, c) : number
+    + gravitationalRedshift(m, r, G, c) : number
+    + gravitationalTimeDilation(m, r, G, c) : number
+    + aberrate(dir, beta) : Vec
+  }
+
+  class BlackHole {
+    <<module>>
+    + schwarzschildRadius(m, G, c) : number
+    + photonSphereRadius(m, G, c) : number
+    + iscoRadius(m, G, c) : number
+    + shadowRadius(m, G, c) : number
+    + hawkingTemperature(massKg) : number
+    + evaporationTime(massKg) : number
+    + ergosphereRadius(m, spin, G, c) : number
+    + tidalAcceleration(m, r, dr, G) : number
+    + geometry(mass, spin) : BlackHoleGeometry
+  }
+
+  class Star {
+    <<module>>
+    + radiusFromMass(m) : number
+    + luminosityFromMass(m) : number
+    + temperatureFrom(m) : number
+    + colorFromTemperature(k) : string
+    + classify(m) : StarClass
+    + lifetimeYears(m) : number
+    + profile(m) : StarProfile
+    + eddingtonLuminosity(m) : number
+  }
+
+  class PhotonSphere {
+    <<module>>
+    + deflectionAngle(m, b, G, c) : number
+    + einsteinRadius(m, dL, dS, G, c) : number
+    + criticalImpactParameter(m, G, c) : number
+    + isCaptured(m, b, G, c) : boolean
+    + bendDirection(px, py, vx, vy, m, G, c) : [number, number]
+    + shapiroDelay(m, r, G, c) : number
+  }
+
+  class Presets {
+    <<module>>
+    + PRESETS : Preset[]
+    + getPreset(key) : Preset?
+    + presetScene(key) : SceneSettings?
+    + byCategory() : Record<string, Preset[]>
+  }
+}
+
+' ============================================================ NUMERIC LIB
+
+package "client/src/lib" #EFFBF0 {
+
+  class MathX {
+    <<module>>
+    + V : VectorOps
+    + S : StatOps
+    + EMA
+    + R : RootFinders
+    + I : Interpolation
+    + fmt(v, digits) : string
+    + clamp(v, lo, hi) : number
+    + lerp(a, b, t) : number
+  }
+
+  class RKMethods {
+    <<module>>
+    + eulerStep(f, t, y, h) : Vec
+    + midpointStep(f, t, y, h) : Vec
+    + heunStep(f, t, y, h) : Vec
+    + rk4Step(f, t, y, h) : Vec
+    + rk45Step(f, t, y, h, tol) : {y, hNext, error}
+    + integrate(f, y0, t0, t1, steps) : samples
+    + step(method, f, t, y, h) : Vec
+  }
+
+  class Calculus {
+    <<module>>
+    + centralDiff(f, x, h) : number
+    + richardsonDiff(f, x, h, levels) : number
+    + gradient(f, x, h) : Vec
+    + jacobian(F, x, h) : number[][]
+    + trapz(f, a, b, n) : number
+    + simpson(f, a, b, n) : number
+    + adaptiveSimpson(f, a, b, tol) : number
+    + gaussQuad(f, a, b, n) : number
+    + romberg(f, a, b, levels) : number
+    + gravityPotential(p, masses, pos, G) : number
+    + gravityField(p, masses, pos, G) : Vec
+  }
+
+  class LinAlg {
+    <<module>>
+    + luDecompose(A) : LUResult
+    + det(A) : number
+    + solve(A, b) : Vec
+    + inverse(A) : Matrix
+    + rank(A) : number
+    + cholesky(A) : Matrix
+    + qr(A) : {Q, R}
+    + powerIteration(A, opts) : EigenResult
+    + rot2 / rotX / rotY / rotZ(t) : Matrix
+  }
+}
+
+' ============================================================ PRESENTATION
+
+package "client/src/render + ui" #FFF7E6 {
+
+  class Renderer {
+    + camera : Camera
+    + options : RenderOptions
+    + resize() : void
+    + screenToWorld(sx, sy) : [number, number]
+    + worldToScreen(wx, wy) : [number, number]
+    + zoomBy(factor, pivot) : void
+    + pan(dx, dy) : void
+    + render(bodies) : void
+    + width : number {get}
+    + height : number {get}
+  }
+
+  class Menu {
+    + constructor(root, callbacks)
+    + update(state) : void
+  }
+
+  interface MenuCallbacks {
+    + onNew() : void
+    + onSave() : void
+    + onOpen() : void
+    + onPreset(key) : void
+    + onTogglePlay() : void
+    + onReset() : void
+    + onClear() : void
+    + onToggleTrails() : void
+    + onToggleGrid() : void
+    + onToggleVelocity() : void
+    + onLogin() : void
+    + onLogout() : void
+    + onExperiments() : void
+  }
+}
+
+' ============================================================ API CLIENTS
+
+package "client/src/api" #F3EFFF {
+
+  class ApiClient {
+    <<module>>
+    + request(path, options) : T
+    + requestWithMeta(path, options) : ApiEnvelope
+    + getToken() : string
+    + setToken(t) : void
+    + clearToken() : void
+  }
+
+  class ApiError {
+    + status : number
+    + code : string
+    + message : string
+    + details : unknown
+  }
+}
+
+' ============================================================ SHARED TYPES
+
+package "shared types" #F5F5F5 {
+
+  class BodySpec <<interface>> {
+    + name : string
+    + kind : BodyKind
+    + mass : number
+    + radius : number
+    + x : number
+    + y : number
+    + vx : number
+    + vy : number
+    + color : string
+    + temperature? : number
+    + luminosity? : number
+    + spin? : number
+    + fixed? : boolean
+    + trailLength? : number
+  }
+
+  class GravitySettings <<interface>> {
+    + G : number
+    + softening : number
+    + relativistic : boolean
+  }
+
+  class CameraSettings <<interface>> {
+    + x : number
+    + y : number
+    + zoom : number
+  }
+
+  class SceneSettings <<interface>> {
+    + bodies : BodySpec[]
+    + gravity : GravitySettings
+    + camera : CameraSettings
+  }
+
+  class Simulation <<interface>> {
+    + id : number
+    + userId : number
+    + name : string
+    + description : string
+    + presetKey : string
+    + bodyCount : number
+    + seed : number
+    + settings : SceneSettings
+    + isPublic : boolean
+    + isArchived : boolean
+    + playCount : number
+    + createdAt : string
+    + updatedAt : string
+    + owner : string
+  }
+
+  class Preset <<interface>> {
+    + id : number
+    + key : string
+    + name : string
+    + category : PresetCategory
+    + description : string
+    + difficulty : number
+    + settings : SceneSettings
+    + isBuiltin : boolean
+    + sortOrder : number
+  }
+
+  class Experiment <<interface>> {
+    + id : number
+    + simulationId : number
+    + userId : number
+    + label : string
+    + integralValue : number
+    + derivativeAt : number
+    + energyDrift : number
+    + samples : number
+    + result : unknown
+    + measuredAt : string
+  }
+
+  class PublicUser <<interface>> {
+    + id : number
+    + username : string
+    + displayName : string
+    + role : UserRole
+  }
+
+  class AuthResult <<interface>> {
+    + user : PublicUser
+    + token : string
+    + expiresIn : string
+  }
+}
+
+' ============================================================ SERVER LAYERS
+
+package "server/src" #FFECEC {
+
+  class Router <<routes>> {
+    + use(path, handler) : void
+  }
+
+  class Controller <<controllers>> {
+    + create(req, res, next) : void
+    + list(req, res, next) : void
+    + getOne(req, res, next) : void
+    + update(req, res, next) : void
+    + remove(req, res, next) : void
+  }
+
+  class Service <<services>> {
+    + create(input, ctx) : Simulation
+    + list(query) : Page~Simulation~
+    + getVisible(id, viewerId, role) : Simulation
+    + update(id, actorId, role, input, ctx) : Simulation
+    + remove(id, actorId, role, ctx) : void
+    + play(id, viewerId, role, ctx) : Simulation
+  }
+
+  class SceneValidator <<services>> {
+    + validateBody(raw, index) : BodySpec
+    + validateScene(raw) : SceneSettings
+    + validateCategory(raw) : PresetCategory
+  }
+
+  class Model <<models>> {
+    + findById(id) : Row
+    + list(opts) : {items, total}
+    + create(input) : Row
+    + update(id, input) : Row
+    + remove(id) : void
+    + incrementPlayCount(id) : void
+    + countForUser(userId) : number
+  }
+
+  class Pool <<database>> {
+    + query(sql, params) : T
+    + execute(sql, params) : ResultSetHeader
+    + ping() : boolean
+    + withTransaction(fn) : T
+    + closePool() : void
+  }
+
+  class AppError {
+    + statusCode : number
+    + code : string
+    + message : string
+    + details : unknown
+    + isOperational : boolean
+  }
+
+  class Middleware <<middleware>> {
+    + requestId(req, res, next) : void
+    + validate(schemas) : Handler
+    + optionalAuth(req, res, next) : void
+    + requireAuth(req, res, next) : void
+    + requireRole(...roles) : Handler
+    + apiLimiter / authLimiter
+    + errorHandler(err, req, res, next) : void
+  }
+}
+
+' ============================================================ RELATIONSHIPS
+
+Engine "1" o-- "*" Body : owns >
+Engine --> GravitySettings
+Engine ..> SceneSettings : load / toScene
+Engine ..> BodySpec : snapshot
+Engine ..> RKMethods : uses rk4Step
+Engine ..> Gravity : computeAccelerations
+Engine ..> Collision : resolve / prune
+
+Body ..> BodySpec : toSpec / fromSpec
+Gravity ..> Relativity : grCorrection
+
+Renderer ..> Body : draws
+Renderer --> CameraSettings
+Menu ..> MenuCallbacks : invokes
+
+SceneSettings *-- BodySpec
+SceneSettings *-- GravitySettings
+SceneSettings *-- CameraSettings
+
+Simulation *-- SceneSettings
+Preset *-- SceneSettings
+AuthResult *-- PublicUser
+
+Router --> Middleware
+Router --> Controller : dispatches
+Controller --> Service : calls
+Controller ..> AppError : throws
+Service --> Model : calls
+Service ..> SceneValidator
+Service ..> SceneSettings : validates
+Model --> Pool : uses
+Middleware ..> AppError
+
+ApiClient ..> ApiError : throws
+
+@enduml

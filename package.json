@@ -1,0 +1,35 @@
+{
+  "name": "astrosim",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AstroSim — black hole & star simulator. TypeScript client, Node/Express server, MySQL persistence.",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "install:all": "npm install",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "npm run build --workspace server",
+    "build:client": "npm run build --workspace client",
+    "dev": "concurrently -n server,client -c yellow,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "start": "npm run start --workspace server",
+    "typecheck": "npm run typecheck --workspace server && npm run typecheck --workspace client",
+    "test": "npm run test --workspace server",
+    "db:migrate": "npm run db:migrate --workspace server",
+    "db:seed": "npm run db:seed --workspace server",
+    "db:reset": "npm run db:reset --workspace server",
+    "lint": "eslint . --ext .ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "eslint": "^9.16.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0"
+  }
+}
