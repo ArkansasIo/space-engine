@@ -2,7 +2,8 @@
  * renderer.ts — canvas 2-D renderer for the simulation.
  */
 import type { Body } from '../sim/body';
-import { clamp, MIN_ZOOM, MAX_ZOOM } from '../sim/constants';
+import { MIN_ZOOM, MAX_ZOOM } from '../sim/constants';
+import { clamp } from '../lib/mathx';
 
 export interface Camera {
   x: number;

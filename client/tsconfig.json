@@ -28,25 +28,24 @@
     "types": [
       "vite/client"
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ],
       "@lib/*": [
-        "src/lib/*"
+        "./src/lib/*"
       ],
       "@sim/*": [
-        "src/sim/*"
+        "./src/sim/*"
       ],
       "@render/*": [
-        "src/render/*"
+        "./src/render/*"
       ],
       "@ui/*": [
-        "src/ui/*"
+        "./src/ui/*"
       ],
       "@api/*": [
-        "src/api/*"
+        "./src/api/*"
       ]
     }
   },

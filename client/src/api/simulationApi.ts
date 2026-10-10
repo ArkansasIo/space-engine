@@ -5,6 +5,7 @@ import { request, requestWithMeta } from './client';
 import type { Simulation, SceneSettings, ApiMeta, BodyDto } from '../types';
 
 export interface ListSimulationsQuery {
+  [key: string]: string | number | boolean | null | undefined;
   page?: number;
   pageSize?: number;
   mine?: boolean;

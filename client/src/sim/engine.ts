@@ -16,7 +16,6 @@ import {
   MIN_DT
 } from './constants';
 import type { SceneSettings, CameraSettings, BodySpec } from '../types';
-import type { Vec } from '../lib/mathx';
 
 export interface EngineOptions {
   dt?: number;
@@ -36,13 +35,11 @@ export class Engine {
   timeScale = 1;
 
   private initialEnergy = 0;
-  private seed: number | null;
 
   constructor(opts: EngineOptions = {}) {
     this.dt = opts.dt ?? DEFAULT_DT;
     this.gravity = opts.gravity ?? { ...DEFAULT_GRAVITY };
     this.collisionMode = opts.collisionMode ?? 'merge';
-    this.seed = opts.seed ?? null;
   }
 
   /* ------------------------------------------------------------ lifecycle */
