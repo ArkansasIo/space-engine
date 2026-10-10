@@ -31,6 +31,7 @@ export function computeAccelerations(
   for (const b of bodies) {
     b.ax = 0;
     b.ay = 0;
+    b.az = 0;
   }
 
   for (let i = 0; i < bodies.length; i++) {
@@ -39,7 +40,8 @@ export function computeAccelerations(
       const b = bodies[j];
       const dx = b.x - a.x;
       const dy = b.y - a.y;
-      const r2 = dx * dx + dy * dy + eps2;
+      const dz = b.z - a.z;
+      const r2 = dx * dx + dy * dy + dz * dz + eps2;
       const invR = 1 / Math.sqrt(r2);
       const invR3 = invR / r2;
 
@@ -47,8 +49,10 @@ export function computeAccelerations(
 
       a.ax += f * b.mass * dx;
       a.ay += f * b.mass * dy;
+      a.az += f * b.mass * dz;
       b.ax -= f * a.mass * dx;
       b.ay -= f * a.mass * dy;
+      b.az -= f * a.mass * dz;
 
       if (relativistic) {
         const corrA = grCorrection([a.x, a.y], [a.vx, a.vy], b.mass, [b.x, b.y], G, C_LIGHT);
@@ -83,7 +87,8 @@ export function potentialEnergy(
       const b = bodies[j];
       const dx = b.x - a.x;
       const dy = b.y - a.y;
-      const r = Math.sqrt(dx * dx + dy * dy + eps2);
+      const dz = b.z - a.z;
+      const r = Math.sqrt(dx * dx + dy * dy + dz * dz + eps2);
       u -= (G * a.mass * b.mass) / r;
     }
   }
@@ -103,27 +108,31 @@ export function totalEnergy(bodies: Body[], settings: GravitySettings = DEFAULT_
 }
 
 /** Total linear momentum of the system. */
-export function totalMomentum(bodies: Body[]): [number, number] {
+export function totalMomentum(bodies: Body[]): [number, number, number] {
   let px = 0;
   let py = 0;
+  let pz = 0;
   for (const b of bodies) {
     px += b.mass * b.vx;
     py += b.mass * b.vy;
+    pz += b.mass * b.vz;
   }
-  return [px, py];
+  return [px, py, pz];
 }
 
 /** Centre of mass of the system. */
-export function centerOfMass(bodies: Body[]): [number, number] {
+export function centerOfMass(bodies: Body[]): [number, number, number] {
   let m = 0;
   let x = 0;
   let y = 0;
+  let z = 0;
   for (const b of bodies) {
     m += b.mass;
     x += b.mass * b.x;
     y += b.mass * b.y;
+    z += b.mass * b.z;
   }
-  return m > 0 ? [x / m, y / m] : [0, 0];
+  return m > 0 ? [x / m, y / m, z / m] : [0, 0, 0];
 }
 
 /**
@@ -161,6 +170,41 @@ export function setCircularOrbit(
   const sign = clockwise ? -1 : 1;
   satellite.vx = central.vx + sign * (-dy / r) * v;
   satellite.vy = central.vy + sign * (dx / r) * v;
+  satellite.vz = central.vz;
+}
+
+/**
+ * Give a body a circular orbit in an arbitrary 3-D plane about a central body.
+ * `normal` is the orbital plane's normal (defaults to +Z, i.e. the XY plane).
+ */
+export function setCircularOrbit3(
+  satellite: Body,
+  central: Body,
+  normal: [number, number, number] = [0, 0, 1],
+  G = DEFAULT_G
+): void {
+  const r: [number, number, number] = [
+    satellite.x - central.x,
+    satellite.y - central.y,
+    satellite.z - central.z
+  ];
+  const dist = Math.hypot(r[0], r[1], r[2]);
+  if (dist < 1e-6) return;
+
+  const n = Math.hypot(normal[0], normal[1], normal[2]);
+  const nx = normal[0] / n;
+  const ny = normal[1] / n;
+  const nz = normal[2] / n;
+
+  // v̂ = n̂ × r̂  (perpendicular to both the radius and the plane normal)
+  const vx = (ny * r[2] - nz * r[1]) / dist;
+  const vy = (nz * r[0] - nx * r[2]) / dist;
+  const vz = (nx * r[1] - ny * r[0]) / dist;
+
+  const speed = circularSpeed(central.mass, dist, G);
+  satellite.vx = central.vx + vx * speed;
+  satellite.vy = central.vy + vy * speed;
+  satellite.vz = central.vz + vz * speed;
 }
 
 /** Does the body escape the system given its energy? */

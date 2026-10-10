@@ -152,17 +152,6 @@ JOIN (
          1 AS is_public, 12 AS play_count
 ) col
 WHERE u.`username` = 'demo';
-         'bodies', JSON_ARRAY(
-           JSON_OBJECT('name','Primary','kind','star','mass',1200,'radius',16,
-                       'x',-140,'y',0,'vx',0.9,'vy',0,'color','#ffd479','temperature',5800,'luminosity',1.4),
-           JSON_OBJECT('name','Secondary','kind','star','mass',1200,'radius',16,
-                       'x',140,'y',0,'vx',-0.9,'vy',0,'color','#ffb347','temperature',5400,'luminosity',1.1)
-         ),
-         'gravity', JSON_OBJECT('G', 1, 'softening', 4, 'relativistic', false),
-         'camera',  JSON_OBJECT('x', 0, 'y', 0, 'zoom', 1)
-       ),
-       1, 12
-  FROM `users` u WHERE u.`username` = 'demo';
 
 INSERT INTO `bodies`
   (`simulation_id`, `name`, `kind`, `mass`, `radius`, `pos_x`, `pos_y`, `vel_x`, `vel_y`,

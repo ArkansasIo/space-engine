@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AstroSim — interactive black hole and star simulator with relativistic gravity." />
+  <title>AstroSim</title>
+  <link rel="stylesheet" href="./src/styles/main.css" />
+  <link rel="stylesheet" href="./src/styles/menu.css" />
+  <link rel="stylesheet" href="./src/styles/panel.css" />
+  <link rel="stylesheet" href="./src/styles/pages.css" />
+</head>
+
+<body>
+  <div id="app">
+    <!-- top menu bar (filled by src/ui/menu.ts) -->
+    <nav id="menubar" class="menubar" aria-label="Main menu"></nav>
+
+    <div id="workspace">
+      <!-- left panel: scene / object list -->
+      <aside id="left-panel" class="side-panel">
+        <div class="panel-title">
+          <span>Objects</span>
+          <button id="obj-add" class="mini-btn" type="button" title="Add body">+</button>
+        </div>
+        <div id="object-list" class="object-list" role="list"></div>
+      </aside>
+
+      <!-- viewport: canvas + overlay hud -->
+      <main id="viewport">
+        <canvas id="stage" aria-label="Simulation viewport"></canvas>
+        <div id="hud" class="hud"></div>
+        <div id="toast" class="toast" aria-live="polite"></div>
+      </main>
+
+      <!-- right panel: inspector -->
+      <aside id="right-panel" class="side-panel">
+        <div class="panel-title">
+          <span>Inspector</span>
+        </div>
+        <div id="inspector" class="inspector">
+          <p class="empty">No body selected.</p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- bottom control bar -->
+    <footer id="controlbar" class="controlbar"></footer>
+  </div>
+
+  <script type="module" src="./src/main.ts"></script>
+</body>
+
+</html>

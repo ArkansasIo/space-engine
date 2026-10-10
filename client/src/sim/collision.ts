@@ -21,7 +21,8 @@ export function detect(bodies: Body[]): CollisionPair[] {
       if (!b.alive) continue;
       const dx = b.x - a.x;
       const dy = b.y - a.y;
-      const d = Math.hypot(dx, dy);
+      const dz = b.z - a.z;
+      const d = Math.hypot(dx, dy, dz);
       const rSum = a.radius + b.radius;
       if (d < rSum) pairs.push({ a, b, overlap: rSum - d });
     }
@@ -33,16 +34,19 @@ export function detect(bodies: Body[]): CollisionPair[] {
 export function bounce(a: Body, b: Body): void {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  const d = Math.hypot(dx, dy);
+  const dz = b.z - a.z;
+  const d = Math.hypot(dx, dy, dz);
   if (d < 1e-9) return;
 
   const nx = dx / d;
   const ny = dy / d;
+  const nz = dz / d;
 
   // Relative velocity along the normal
   const rvx = b.vx - a.vx;
   const rvy = b.vy - a.vy;
-  const vn = rvx * nx + rvy * ny;
+  const rvz = b.vz - a.vz;
+  const vn = rvx * nx + rvy * ny + rvz * nz;
   if (vn > 0) return; // already separating
 
   const invMa = a.fixed ? 0 : 1 / a.mass;
@@ -54,16 +58,20 @@ export function bounce(a: Body, b: Body): void {
 
   a.vx -= jImp * invMa * nx;
   a.vy -= jImp * invMa * ny;
+  a.vz -= jImp * invMa * nz;
   b.vx += jImp * invMb * nx;
   b.vy += jImp * invMb * ny;
+  b.vz += jImp * invMb * nz;
 
   // Positional correction to remove overlap
   const overlap = a.radius + b.radius - d;
   const push = overlap / invSum;
   a.x -= push * invMa * nx;
   a.y -= push * invMa * ny;
+  a.z -= push * invMa * nz;
   b.x += push * invMb * nx;
   b.y += push * invMb * ny;
+  b.z += push * invMb * nz;
 }
 
 /**
@@ -76,8 +84,10 @@ export function merge(a: Body, b: Body): Body {
 
   a.vx = (a.mass * a.vx + b.mass * b.vx) / totalMass;
   a.vy = (a.mass * a.vy + b.mass * b.vy) / totalMass;
+  a.vz = (a.mass * a.vz + b.mass * b.vz) / totalMass;
   a.x = (a.mass * a.x + b.mass * b.x) / totalMass;
   a.y = (a.mass * a.y + b.mass * b.y) / totalMass;
+  a.z = (a.mass * a.z + b.mass * b.z) / totalMass;
   a.mass = totalMass;
   a.radius = Math.sqrt(a.radius * a.radius + b.radius * b.radius) * COLLISION_MERGE_FACTOR;
   a.luminosity += b.luminosity;

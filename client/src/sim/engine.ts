@@ -91,54 +91,63 @@ export class Engine {
   step(dt = this.dt): void {
     if (!this.bodies.length) return;
 
-    const dim = this.bodies.length * 2;
+    const n = this.bodies.length;
+    const dim = n * 3;
     const state = new Array<number>(dim * 2);
-    for (let i = 0; i < this.bodies.length; i++) {
+    for (let i = 0; i < n; i++) {
       const b = this.bodies[i];
       state[i] = b.x;
-      state[this.bodies.length + i] = b.y;
+      state[n + i] = b.y;
+      state[2 * n + i] = b.z;
       state[dim + i] = b.vx;
-      state[dim + this.bodies.length + i] = b.vy;
+      state[dim + n + i] = b.vy;
+      state[dim + 2 * n + i] = b.vz;
     }
 
     const f: Derivative = (_t, y) => {
-      const n = this.bodies.length;
       const out = new Array<number>(y.length);
       // positions stay put; velocities copy through
       for (let i = 0; i < n; i++) {
-        out[i] = y[2 * n + i];
-        out[n + i] = y[3 * n + i];
+        out[i] = y[dim + i];
+        out[n + i] = y[dim + n + i];
+        out[2 * n + i] = y[dim + 2 * n + i];
       }
-      // write current positions to a temp body view for the force model
-      const saved = this.bodies.map((b) => [b.x, b.y, b.vx, b.vy] as [number, number, number, number]);
+      // write current positions to the live bodies for the force model
+      const saved = this.bodies.map(
+        (b) => [b.x, b.y, b.z, b.vx, b.vy, b.vz] as [number, number, number, number, number, number]
+      );
       for (let i = 0; i < n; i++) {
         const b = this.bodies[i];
         b.x = y[i];
         b.y = y[n + i];
-        b.vx = y[2 * n + i];
-        b.vy = y[3 * n + i];
+        b.z = y[2 * n + i];
+        b.vx = y[dim + i];
+        b.vy = y[dim + n + i];
+        b.vz = y[dim + 2 * n + i];
       }
       computeAccelerations(this.bodies, this.gravity);
       for (let i = 0; i < n; i++) {
-        out[2 * n + i] = this.bodies[i].ax;
-        out[3 * n + i] = this.bodies[i].ay;
+        out[dim + i] = this.bodies[i].ax;
+        out[dim + n + i] = this.bodies[i].ay;
+        out[dim + 2 * n + i] = this.bodies[i].az;
       }
       // restore so a rejected sub-step does not corrupt state
       for (let i = 0; i < n; i++) {
         const b = this.bodies[i];
-        [b.x, b.y, b.vx, b.vy] = saved[i];
+        [b.x, b.y, b.z, b.vx, b.vy, b.vz] = saved[i];
       }
       return out;
     };
 
     const next = rk4Step(f, this.time, state, dt);
-    const n = this.bodies.length;
     for (let i = 0; i < n; i++) {
       const b = this.bodies[i];
       b.x = next[i];
       b.y = next[n + i];
-      b.vx = next[2 * n + i];
-      b.vy = next[3 * n + i];
+      b.z = next[2 * n + i];
+      b.vx = next[dim + i];
+      b.vy = next[dim + n + i];
+      b.vz = next[dim + 2 * n + i];
     }
 
     this.time += dt;

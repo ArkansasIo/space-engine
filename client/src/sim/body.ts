@@ -20,8 +20,10 @@ export interface BodyOptions {
   radius?: number;
   x?: number;
   y?: number;
+  z?: number;
   vx?: number;
   vy?: number;
+  vz?: number;
   color?: string;
   temperature?: number;
   luminosity?: number;
@@ -45,17 +47,20 @@ export class Body {
   radius: number;
   x: number;
   y: number;
+  z: number;
   vx: number;
   vy: number;
+  vz: number;
   ax = 0;
   ay = 0;
+  az = 0;
   color: string;
   temperature: number;
   luminosity: number;
   spin: number;
   fixed: boolean;
   trailLength: number;
-  trail: Array<[number, number]> = [];
+  trail: Array<[number, number, number]> = [];
   alive = true;
 
   constructor(opts: BodyOptions = {}) {
@@ -67,8 +72,10 @@ export class Body {
     this.radius = opts.radius ?? DEFAULT_RADIUS;
     this.x = opts.x ?? 0;
     this.y = opts.y ?? 0;
+    this.z = opts.z ?? 0;
     this.vx = opts.vx ?? 0;
     this.vy = opts.vy ?? 0;
+    this.vz = opts.vz ?? 0;
     this.color = opts.color ?? KIND_COLORS[this.kind] ?? DEFAULT_COLOR;
     this.temperature = opts.temperature ?? 0;
     this.luminosity = opts.luminosity ?? 0;
@@ -78,17 +85,44 @@ export class Body {
   }
 
   get speed(): number {
+    return Math.hypot(this.vx, this.vy, this.vz);
+  }
+
+  /** In-plane speed, for callers that only care about the projected motion. */
+  get planarSpeed(): number {
     return Math.hypot(this.vx, this.vy);
   }
 
   get kineticEnergy(): number {
-    return 0.5 * this.mass * (this.vx * this.vx + this.vy * this.vy);
+    return 0.5 * this.mass * (this.vx * this.vx + this.vy * this.vy + this.vz * this.vz);
+  }
+
+  /** Position as a 3-D vector. */
+  get pos(): [number, number, number] {
+    return [this.x, this.y, this.z];
+  }
+
+  /** Velocity as a 3-D vector. */
+  get vel(): [number, number, number] {
+    return [this.vx, this.vy, this.vz];
+  }
+
+  setPos(p: [number, number, number]): void {
+    this.x = p[0];
+    this.y = p[1];
+    this.z = p[2];
+  }
+
+  setVel(v: [number, number, number]): void {
+    this.vx = v[0];
+    this.vy = v[1];
+    this.vz = v[2];
   }
 
   /** Push the current position onto the trail ring buffer. */
   pushTrail(): void {
     if (this.trailLength <= 0) return;
-    this.trail.push([this.x, this.y]);
+    this.trail.push([this.x, this.y, this.z]);
     while (this.trail.length > this.trailLength) this.trail.shift();
   }
 
@@ -104,8 +138,10 @@ export class Body {
       radius: this.radius,
       x: this.x,
       y: this.y,
+      z: this.z,
       vx: this.vx,
       vy: this.vy,
+      vz: this.vz,
       color: this.color,
       temperature: this.temperature,
       luminosity: this.luminosity,
@@ -124,6 +160,7 @@ export class Body {
     b.id = this.id;
     b.ax = this.ax;
     b.ay = this.ay;
+    b.az = this.az;
     return b;
   }
 }

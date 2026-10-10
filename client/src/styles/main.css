@@ -1,0 +1,150 @@
+/* ==========================================================================
+   main.css — global layout, theme tokens, viewport & canvas
+   ========================================================================== */
+
+:root {
+  /* --- palette --- */
+  --bg-0:        #05060a;
+  --bg-1:        #0a0d16;
+  --bg-2:        #10141f;
+  --bg-3:        #171d2b;
+  --bg-hover:    #1e2637;
+  --line:        #232c3f;
+  --line-soft:   #1a2130;
+
+  --fg-0:        #e8edf7;
+  --fg-1:        #a8b3c9;
+  --fg-2:        #6b7896;
+
+  --accent:      #ffb347;   /* star gold  */
+  --accent-2:    #6ea8ff;   /* cool blue  */
+  --accent-3:    #b98bff;   /* violet     */
+  --danger:      #ff5d6c;
+  --ok:          #4ad991;
+
+  --glow-star:   255, 196, 92;
+  --glow-hole:   255, 138, 60;
+
+  /* --- metrics --- */
+  --menubar-h:   30px;
+  --controlbar-h:44px;
+  --panel-w:     248px;
+  --radius:      8px;
+  --radius-sm:   5px;
+
+  --font-ui:  "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, "SF Mono", monospace;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ------------------------------------------------------------------ workspace */
+#workspace {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  background:
+    radial-gradient(1200px 700px at 70% -10%, #131a2b 0%, transparent 60%),
+    var(--bg-0);
+}
+
+/* ------------------------------------------------------------------ viewport */
+#viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+#stage.grabbing { cursor: grabbing; }
+#stage.placing  { cursor: copy; }
+
+/* ------------------------------------------------------------------ hud */
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--fg-1);
+  text-shadow: 0 1px 3px #000;
+  white-space: pre;
+  z-index: 5;
+}
+.hud b   { color: var(--accent); font-weight: 600; }
+.hud .k  { color: var(--fg-2); }
+
+/* ------------------------------------------------------------------ toast */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translate(-50%, 14px);
+  padding: 8px 16px;
+  background: rgba(16, 20, 31, .94);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--fg-0);
+  font-size: 12.5px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+  z-index: 40;
+  max-width: 70%;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.toast.error { border-left-color: var(--danger); }
+.toast.ok    { border-left-color: var(--ok); }
+
+/* ------------------------------------------------------------------ scrollbars */
+::-webkit-scrollbar          { width: 9px; height: 9px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: #2a3346; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #384562; }
+
+/* ------------------------------------------------------------------ utility */
+.mono  { font-family: var(--font-mono); }
+.dim   { color: var(--fg-2); }
+.right { margin-left: auto; }
+.hidden { display: none !important; }
+
+.row   { display: flex; align-items: center; gap: 8px; }
+.col   { display: flex; flex-direction: column; gap: 8px; }
+.grow  { flex: 1 1 auto; min-width: 0; }
